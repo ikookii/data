@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>woha</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
+    <style>
+        /* --- الإعدادات الأساسية والتصميم العام --- */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #ffffff;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --light-bg-color: #ecf0f1;
+            --animation-speed: 4.5s; /* تم زيادة السرعة قليلاً */
+            /* متغيرات إضافية للتأثير ثلاثي الأبعاد */
+            --cube-thickness: 5px;
+            --primary-side-color: #2980b9;
+            --primary-bottom-color: #2471a3;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--light-bg-color);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            user-select: none; /* لمنع تحديد النص والنسخ */
+        }
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- منطقة اللعب (70% من الشاشة) --- */
+        .game-area {
+            height: 70%;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--secondary-color);
+            border-bottom: 5px solid var(--primary-color);
+        }
+
+        .score-display {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--dark-color);
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 15px;
+            border-radius: 20px;
+            z-index: 10;
+        }
+
+        .shape-container {
+            position: absolute;
+            animation-name: fall;
+            animation-timing-function: linear;
+            animation-duration: var(--animation-speed);
+            animation-fill-mode: forwards;
+        }
+
+        .square {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            width: 42px; /* تعديل لملء الفراغ الناتج عن إزالة الإطار */
+            height: 42px;
+            background-color: var(--primary-color);
+            border: 2px solid var(--secondary-color);
+            /* تصميم ثلاثي الأبعاد */
+            box-shadow: 4px 4px 0px #2980b9;
+            /* إزالة الإطار والظل القديم للحصول على مظهر أنظف */
+            transition: transform 0.1s;
+        }
+
+        /* إنشاء الوجه الجانبي للمكعب (يمين) */
+        .square::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 100%;
+            width: var(--cube-thickness);
+            height: 100%;
+            background-color: var(--primary-side-color);
+            transform: skewY(45deg);
+            transform-origin: top left;
+        }
+
+        /* إنشاء الوجه السفلي للمكعب */
+        .square::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: var(--cube-thickness);
+            background-color: var(--primary-bottom-color);
+            transform: skewX(45deg);
+            transform-origin: top left;
+        }
+
+        /* --- حركة سقوط الأشكال (بدون دوران) --- */
+        @keyframes fall {
+            from {
+                transform: translate(0, -200px);
+            }
+            to {
+                transform: translate(calc(-100vw - 100px), calc(70vh + 100px));
+            }
+        }
+        
+        /* --- منطقة التحكم (30% من الشاشة) --- */
+        .controls-area {
+            height: 30%;
+            background-color: #bdc3c7;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10%;
+            position: relative;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            border-radius: 50%;
+            font-size: 48px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+            box-shadow: 0 4px #2980b9;
+        }
+
+        .control-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 #2980b9;
+        }
+
+        .guess-box {
+            width: 150px;
+            height: 100px;
+            background-color: var(--secondary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        #guess-number {
+            font-size: 60px;
+            font-weight: 700;
+            color: var(--dark-color);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .guess-box.correct { background-color: var(--success-color); animation: pulse 0.5s; }
+        .guess-box.incorrect { background-color: var(--error-color); animation: shake 0.5s; }
+        .guess-box.correct #guess-number, .guess-box.incorrect #guess-number { color: var(--secondary-color); }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-8px);} 75% {transform: translateX(8px);} }
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+
+        /* --- شاشة الخسارة المحسّنة --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, var(--secondary-color), var(--light-bg-color));
+            padding: 40px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: pop-in 0.4s ease-out;
+            width: 90%; max-width: 400px;
+        }
+
+        .modal-content h2 { margin-top: 0; color: var(--error-color); font-size: 32px; }
+        .modal-content p { font-size: 18px; color: var(--dark-color); margin: 15px 0; }
+        .final-score { font-size: 24px; font-weight: bold; color: var(--primary-color); margin-bottom: 25px; }
+
+        #retry-btn {
+            background-color: var(--primary-color); color: var(--secondary-color);
+            border: none; padding: 15px 30px; font-size: 20px;
+            border-radius: 10px; cursor: pointer; margin-top: 15px;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px #2980b9;
+        }
+        #retry-btn:hover { background-color: #3ca9e2; }
+        #retry-btn:active { transform: translateY(2px); box-shadow: 0 2px #2980b9; }
+
+        @keyframes pop-in { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        /* --- شاشة عد المربعات المحسّنة --- */
+        .counting-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 70%;
+            background-color: rgba(236, 240, 241, 0.9); display: none;
+            justify-content: center; align-items: center; z-index: 500;
+            flex-direction: column;
+        }
+
+        #counting-display { font-size: 80px; font-weight: bold; color: var(--dark-color); margin-bottom: 40px; }
+        .counting-grid-container { position: relative; }
+        .count-square {
+            position: absolute; width: 35px; height: 35px; background-color: #95a5a6;
+            border-radius: 5px; transition: background-color 0.3s, transform 0.3s;
+        }
+        .count-square.counted { background-color: var(--primary-color); transform: scale(1.1); }
+        .count-square.error { background-color: var(--error-color); transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-area" id="game-area">
+            <div class="score-display">النقاط: <span id="score">0</span></div>
+        </div>
+        <div class="controls-area">
+            <button class="control-btn" id="increase-btn">+</button>
+            <div class="guess-box" id="guess-box">
+                <span id="guess-number">0</span>
+            </div>
+            <button class="control-btn" id="decrease-btn">-</button>
+        </div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2>لقد خسرت!</h2>
+            <p>العدد الصحيح كان <strong id="correct-answer-text"></strong></p>
+            <div class="final-score">النتيجة النهائية: <span id="final-score">0</span></div>
+            <button id="retry-btn">ابدأ من جديد</button>
+        </div>
+    </div>
+    
+    <div class="counting-overlay" id="counting-overlay">
+        <div id="counting-display">0</div>
+        <div class="counting-grid-container" id="counting-grid-container"></div>
+    </div>
+
+    <script>
+        // --- الوصول لعناصر الواجهة ---
+        const gameArea = document.getElementById('game-area');
+        const guessNumberEl = document.getElementById('guess-number');
+        const guessBox = document.getElementById('guess-box');
+        const modal = document.getElementById('modal');
+        const retryBtn = document.getElementById('retry-btn');
+        const correctAnswerText = document.getElementById('correct-answer-text');
+        const countingOverlay = document.getElementById('counting-overlay');
+        const countingDisplay = document.getElementById('counting-display');
+        const countingGridContainer = document.getElementById('counting-grid-container');
+        const scoreEl = document.getElementById('score');
+        const finalScoreEl = document.getElementById('final-score');
+        
+        // --- متغيرات حالة اللعبة ---
+        let currentGuess = 0;
+        let level = 0;
+        let score = 0;
+        let actualNumberOfSquares = 0;
+        let currentShapeCoords = [];
+        let isChecking = false;
+
+        /**
+         * إنشاء شكل عشوائي متصل من عدد معين من المربعات
+         */
+        function generateShape(count) {
+            const coords = [{ x: 0, y: 0 }];
+            const occupied = { '0,0': true };
+
+            while (coords.length < count) {
+                const frontier = [];
+                for (const coord of coords) {
+                    const neighbors = [
+                        { x: coord.x + 1, y: coord.y }, { x: coord.x - 1, y: coord.y },
+                        { x: coord.x, y: coord.y + 1 }, { x: coord.x, y: coord.y - 1 }
+                    ];
+                    for (const n of neighbors) {
+                        if (!occupied[`${n.x},${n.y}`]) {
+                            frontier.push(n);
+                        }
+                    }
+                }
+                const uniqueFrontier = [...new Map(frontier.map(item => [`${item.x},${item.y}`, item])).values()];
+                const nextCoord = uniqueFrontier[Math.floor(Math.random() * uniqueFrontier.length)];
+                if (!nextCoord) break; // In case no new spot is found
+                coords.push(nextCoord);
+                occupied[`${nextCoord.x},${nextCoord.y}`] = true;
+            }
+            return coords;
+        }
+
+        /**
+         * بدء اللعبة من الصفر
+         */
+        function startGame() {
+            level = 0;
+            score = 0;
+            modal.style.display = 'none';
+            nextLevel();
+        }
+
+        /**
+         * الانتقال إلى المستوى التالي
+         */
+        function nextLevel() {
+            level++;
+            score = level - 1;
+            updateScoreDisplay();
+
+            isChecking = false;
+            guessBox.classList.remove('correct', 'incorrect');
+            currentGuess = 0; // إعادة الرقم للصفر
+            updateGuessDisplay();
+
+            if (level === 1) {
+                actualNumberOfSquares = 2;
+            } else {
+                // زيادة الصعوبة بشكل معقول (إضافة 0 أو 1 أو 2)
+                const increase = Math.random() > 0.4 ? (Math.random() > 0.7 ? 2 : 1) : 0;
+                actualNumberOfSquares += increase;
+            }
+            actualNumberOfSquares = Math.max(2, actualNumberOfSquares);
+            
+            currentShapeCoords = generateShape(actualNumberOfSquares);
+            startAnimation();
+        }
+        
+        /**
+         * إنشاء الشكل وتحريكه
+         */
+        function startAnimation() {
+            // بدلاً من مسح كل شيء، نزيل فقط حاوية الشكل القديمة إن وجدت
+            const oldShapeContainer = gameArea.querySelector('.shape-container');
+            if (oldShapeContainer) {
+                gameArea.removeChild(oldShapeContainer);
+            }
+
+            const shapeContainer = document.createElement('div');
+            shapeContainer.className = 'shape-container';
+            
+            currentShapeCoords.forEach(coord => {
+                const square = document.createElement('div');
+                square.className = 'square';
+                square.style.left = `${coord.x * 42}px`; // 40 width + 2 border
+                square.style.top = `${coord.y * 42}px`;
+                shapeContainer.appendChild(square);
+            });
+
+            shapeContainer.style.top = `${Math.random() * 40 - 50}px`;
+            shapeContainer.style.right = `${Math.random() * 200 - 50}px`;
+            gameArea.appendChild(shapeContainer);
+        }
+        
+        function updateGuessDisplay() {
+            guessNumberEl.textContent = currentGuess;
+            guessNumberEl.style.transform = 'scale(1.2)';
+            setTimeout(() => { guessNumberEl.style.transform = 'scale(1)'; }, 150);
+        }
+
+        function updateScoreDisplay() {
+            scoreEl.textContent = score;
+        }
+        
+        function checkAnswer() {
+            if (isChecking) return;
+            isChecking = true;
+            
+            showCountingAnimation(() => {
+                const isCorrect = parseInt(currentGuess) === actualNumberOfSquares;
+                guessBox.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+                setTimeout(() => {
+                    if (isCorrect) {
+                        nextLevel();
+                    } else {
+                        correctAnswerText.textContent = actualNumberOfSquares;
+                        finalScoreEl.textContent = score;
+                        modal.style.display = 'flex';
+                    }
+                }, 1200);
+            });
+        }
+        
+        /**
+         * عرض شاشة عد المربعات المحسّنة
+         */
+        function showCountingAnimation(callback) {
+            countingGridContainer.innerHTML = '';
+            countingDisplay.textContent = '0';
+            countingOverlay.style.display = 'flex';
+
+            const allSquaresForDisplay = [];
+            currentShapeCoords.forEach(coord => {
+                const sq = document.createElement('div');
+                sq.className = 'count-square';
+                sq.style.left = `${coord.x * 37}px`;
+                sq.style.top = `${coord.y * 37}px`;
+                countingGridContainer.appendChild(sq);
+                allSquaresForDisplay.push(sq);
+            });
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                // الشرط الجديد: العد يتوقف عند العدد الفعلي للمربعات
+                if (count < actualNumberOfSquares) {
+                    const squareToColor = allSquaresForDisplay[count];
+
+                    // إذا كان تخمين المستخدم يشمل هذا المربع، يتم تلوينه بالأزرق
+                    // وإلا، يتم تلوينه بالأحمر لأنه مربع تم إغفاله
+                    if (count < currentGuess) {
+                        squareToColor.classList.add('counted');
+                    } else {
+                        squareToColor.classList.add('error');
+                    }
+
+                    count++;
+                    countingDisplay.textContent = count;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        countingOverlay.style.display = 'none';
+                        if (callback) callback();
+                    }, 800);
+                }
+            }, 150);
+        }
+
+        // --- ربط الأحداث بالأزرار ---
+        document.getElementById('increase-btn').addEventListener('click', () => {
+            if (isChecking) return;
+            currentGuess++;
+            updateGuessDisplay();
+        });
+
+        document.getElementById('decrease-btn').addEventListener('click', () => {
+            if (isChecking) return;
+            if (currentGuess > 0) {
+                currentGuess--;
+                updateGuessDisplay();
+            }
+        });
+        
+        guessBox.addEventListener('click', checkAnswer);
+        retryBtn.addEventListener('click', startGame);
+        
+        // --- بدء اللعبة ---
+        startGame();
+
+        // --- تسجيل الـ Service Worker لتفعيل PWA ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('تم تسجيل Service Worker بنجاح:', registration);
+                    })
+                    .catch(error => {
+                        console.log('فشل تسجيل Service Worker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
